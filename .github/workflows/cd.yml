@@ -1,0 +1,60 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  merge-to-main:
+    name: Merge dev into main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to push the merge commit to main
+      checks: read     # needed to poll CI check-run status
+
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for CI to succeed on this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA="${{ github.sha }}"
+          REPO="${{ github.repository }}"
+          MAX_ATTEMPTS=30   # 30 × 20 s = 10-minute timeout
+          SLEEP_INTERVAL=20
+          echo "Waiting for CI workflow to finish for commit $SHA …"
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            STATUS=$(gh api \
+              "/repos/$REPO/commits/$SHA/check-runs" \
+              --jq '[.check_runs[] | select(.name == "Run tests")] | if length == 0 then "pending" else (.[0].conclusion // "in_progress") end')
+            echo "  attempt $i/$MAX_ATTEMPTS: status=$STATUS"
+            if [ "$STATUS" = "success" ]; then
+              echo "CI passed — proceeding with merge."
+              break
+            elif [ "$STATUS" = "failure" ] || [ "$STATUS" = "cancelled" ] || [ "$STATUS" = "timed_out" ]; then
+              echo "CI did not pass (status: $STATUS). Aborting merge."
+              exit 1
+            fi
+            sleep $SLEEP_INTERVAL
+          done
+          if [ "$STATUS" != "success" ]; then
+            echo "CI check did not complete within the timeout. Aborting merge."
+            exit 1
+          fi
+
+      - name: Merge dev into main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git merge --no-ff origin/dev -m "chore: auto-merge dev into main"
+          git push origin main
