@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+import asyncio
 import json
 from pathlib import Path
 from typing import Any
+
+import requests
 
 
 @dataclass
@@ -49,6 +52,36 @@ class RecoveryLayer:
                     continue
         self.memory_log = loaded
         return loaded
+
+    def append_recovered_entry(self, entry: dict[str, Any]) -> None:
+        # fast duplicate guard for retry-heavy recovery
+        if entry.get("index") < len(self.memory_log):
+            return
+        self.memory_log.append(entry)
+        path = self._disk_path()
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+
+    async def catch_up_with_leader(self, leader_url: str) -> int:
+        from_index = len(self.memory_log)
+
+        def _fetch() -> dict[str, Any]:
+            res = requests.post(
+                f"{leader_url}/sync-log",
+                json={"from_index": from_index},
+                timeout=1.0,
+            )
+            if not res.ok:
+                return {"entries": []}
+            return res.json()
+
+        data = await asyncio.to_thread(_fetch)
+        fetched = data.get("entries", [])
+        for item in fetched:
+            self.append_recovered_entry(item)
+
+        self._restore_indices()
+        return len(fetched)
 
     async def bootstrap(self) -> RecoveryState:
         self.load_logs()
