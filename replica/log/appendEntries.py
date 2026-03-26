@@ -41,10 +41,22 @@ def handle_append_entries(
                 "term": current_term,
                 "success": False,
                 "last_log_index": last_log_index,
+                "reconcile_needed": True,
+                "conflict_at": prev_log_index,
             }
 
     # Check 3: Append new entries (idempotent)
-    for entry_data in entries:
+    next_expected = prev_log_index + 1
+    for offset, entry_data in enumerate(entries):
+        incoming_index = entry_data.get("index", next_expected + offset)
+        if incoming_index != next_expected + offset:
+            return {
+                "term": current_term,
+                "success": False,
+                "last_log_index": log_store.get_last_index(),
+                "reconcile_needed": True,
+                "conflict_at": incoming_index,
+            }
         stroke = Stroke(**entry_data.get("stroke", {}))
         log_store.append(entry_data.get("term", current_term), stroke)
 
