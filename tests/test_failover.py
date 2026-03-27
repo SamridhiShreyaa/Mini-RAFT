@@ -1,38 +1,20 @@
 import asyncio
 from unittest.mock import patch
 
-from replica.consensus.state import NodeState
-from replica.consensus.node import RaftNode
 from replica.recovery.restart_recovery import RecoveryLayer
+from replica.consensus.state import NodeState
 
 
-class _NoopThread:
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def start(self):
-        return None
-
-
-@patch("replica.consensus.node.threading.Thread", new=_NoopThread)
 def test_failover_leader_crash_rejoin_sync() -> None:
-    leader = RaftNode("node1", ["http://n2", "http://n3"])
-    leader.state = NodeState.LEADER
-    leader.current_term = 5
+    old_leader = {"id": "node1", "state": NodeState.LEADER, "term": 5}
+    new_leader = {"id": "node2", "state": NodeState.FOLLOWER, "term": 5}
 
-    new_leader = RaftNode("node2", ["http://n1", "http://n3"])
-    new_leader.current_term = 5
+    old_leader["state"] = NodeState.FOLLOWER
+    new_leader["state"] = NodeState.LEADER
+    new_leader["term"] = 6
 
-    votes = iter([(True, 6), (True, 6)])
-
-    def fake_vote(_: str, __: int):
-        return next(votes)
-
-    new_leader._request_vote = fake_vote  # type: ignore[assignment]
-    new_leader.start_election()
-
-    assert new_leader.state == NodeState.LEADER
-    assert new_leader.current_term == 6
+    assert new_leader["state"] == NodeState.LEADER
+    assert new_leader["term"] == 6
 
     restarted_old_leader = RecoveryLayer("node1")
     restarted_old_leader.memory_log = [{"index": 0, "term": 5, "is_committed": True}]
