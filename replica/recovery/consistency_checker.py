@@ -47,7 +47,6 @@ class ConsistencyChecker:
     ) -> bool:
         upto = min(len(local_log), len(leader_log))
         for idx in range(upto):
-            leader_idx = max(0, idx - 1)
-            if _entry_hash(local_log[idx]) != _entry_hash(leader_log[leader_idx]):
+            if _entry_hash(local_log[idx]) != _entry_hash(leader_log[idx]):
                 return False
         return True
