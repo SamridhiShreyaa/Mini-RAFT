@@ -23,9 +23,8 @@ class ReconciliationEngine:
         return await asyncio.to_thread(_fetch)
 
     async def reconcile(self, leader_url: str, conflict_index: int) -> int:
-        # BUG(v1): this keeps conflicting index itself; only trims after it
-        if conflict_index + 1 < len(self.memory_log):
-            del self.memory_log[conflict_index + 1 :]
+        if conflict_index < len(self.memory_log):
+            del self.memory_log[conflict_index:]
 
         incoming = await self.fetch_from_leader(leader_url, conflict_index)
         for item in incoming:
