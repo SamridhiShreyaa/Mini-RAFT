@@ -6,6 +6,7 @@ __pycache__/
 # Distribution and build artifacts
 build/
 dist/
+logs/
 *.egg-info/
 .eggs/
 
