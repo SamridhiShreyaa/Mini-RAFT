@@ -1,7 +1,9 @@
 from unittest.mock import patch
+import asyncio
 
 from replica.consensus.node import RaftNode
 from replica.consensus.state import NodeState
+from replica.recovery.restart_recovery import RecoveryLayer
 
 
 class _NoopThread:
@@ -62,3 +64,26 @@ def test_minority_partition_cannot_elect_leader_in_4_node_cluster() -> None:
     assert node.votes_received == 2
     assert node._majority_count() == 3
     assert node.state != NodeState.LEADER
+
+
+def test_partition_healed_replica_catches_up() -> None:
+    recovery = RecoveryLayer("node4")
+    recovery.memory_log = [{"index": 0, "term": 1, "is_committed": True}]
+
+    class _Resp:
+        ok = True
+
+        @staticmethod
+        def json() -> dict:
+            return {
+                "entries": [
+                    {"index": 1, "term": 1, "is_committed": True},
+                    {"index": 2, "term": 2, "is_committed": True},
+                ]
+            }
+
+    with patch("replica.recovery.restart_recovery.requests.post", return_value=_Resp()):
+        added = asyncio.run(recovery.catch_up_with_leader("http://leader"))
+
+    assert added == 2
+    assert len(recovery.memory_log) == 3
