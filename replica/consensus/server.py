@@ -59,6 +59,10 @@ class RedoRequest(BaseModel):
     stroke_index: int
 
 
+class SyncLogRequest(BaseModel):
+    from_index: int
+
+
 @app.post("/request-vote")
 def request_vote(req: VoteRequest) -> dict:
     return node.handle_request_vote(req.term, req.candidate_id)
@@ -136,6 +140,15 @@ def get_status() -> dict:
         "node": node.node_id,
         "isLeader": node.state == NodeState.LEADER,
         "logSize": log_store.get_log_size(),
+    }
+
+
+@app.post("/sync-log")
+def sync_log(req: SyncLogRequest) -> dict:
+    entries = [e.model_dump() for e in log_store.get_committed_entries_from(req.from_index)]
+    return {
+        "entries": entries,
+        "last_index": log_store.get_last_index(),
     }
 
 

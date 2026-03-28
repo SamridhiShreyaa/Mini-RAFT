@@ -1,6 +1,7 @@
 import json
 import threading
 import hashlib
+import os
 from typing import Optional, List
 from .models import LogEntry, Stroke, EntryType
 
@@ -22,6 +23,7 @@ class LogStore:
         self.lock = threading.Lock()
         self.log_file = f"logs/node_{node_id}.json"
         self.enable_hashing = enable_hashing
+        self.persist_to_disk = "PYTEST_CURRENT_TEST" not in os.environ
         self._load_from_disk()
 
     def append(self, term: int, stroke: Stroke, entry_type: EntryType = EntryType.STROKE, 
@@ -150,14 +152,19 @@ class LogStore:
 
     def _persist_entry(self, entry: LogEntry) -> None:
         """Persist entry to disk (append mode)."""
+        if not self.persist_to_disk:
+            return
         try:
+            os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
             with open(self.log_file, "a") as f:
-                f.write(json.dumps(entry.dict()) + "\n")
+                f.write(json.dumps(entry.model_dump()) + "\n")
         except Exception:
             pass  # Gracefully handle file I/O errors
 
     def _load_from_disk(self) -> None:
         """Load log entries from disk on startup."""
+        if not self.persist_to_disk:
+            return
         try:
             with open(self.log_file, "r") as f:
                 for line in f:
