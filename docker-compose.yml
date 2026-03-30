@@ -1,3 +1,46 @@
-version: "3.9"
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - replica
+      - replica1
+      - replica2
+      - replica3
+      - replica4
 
-services: {}
+  replica:
+    build: ./replica
+    environment:
+      - PORT=3001
+    ports:
+      - "3001:3001"
+
+  replica1:
+    build: ./replica1
+    environment:
+      - PORT=3002
+    ports:
+      - "3002:3002"
+
+  replica2:
+    build: ./replica2
+    environment:
+      - PORT=3003
+    ports:
+      - "3003:3003"
+
+  replica3:
+    build: ./replica3
+    environment:
+      - PORT=3004
+    ports:
+      - "3004:3004"
+
+  replica4:
+    build: ./replica4
+    environment:
+      - PORT=3005
+    ports:
+      - "3005:3005"
