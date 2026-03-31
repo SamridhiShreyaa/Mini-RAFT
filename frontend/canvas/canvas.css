@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════════════════════
+   CANVAS STYLES
+   Framed board aesthetic
+   ═══════════════════════════════════════════════════════ */
+
+#canvasContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+#canvasContainer .canvas-wrapper {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  /* Thick "wooden" frame effect */
+  border: 12px solid var(--border-frame);
+  box-shadow: 
+    inset 0 0 0 2px rgba(255, 255, 255, 0.1),
+    var(--shadow-lg),
+    0 0 0 1px var(--border-strong);
+  background: var(--canvas-border);
+  transition: border-color var(--transition-med);
+}
+
+/* Inner shadow for depth */
+#canvasContainer .canvas-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+#drawCanvas {
+  display: block;
+  background: var(--canvas-bg);
+  /* Subtle dot grid pattern */
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -10px -10px;
+  cursor: crosshair;
+  touch-action: none;
+  transition: background-color var(--transition-med);
+}
+
+/* Layer for text, stickies, etc */
+.canvas-render-layer {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; /* Let canvas handle raw events, or we toggle this */
+  z-index: 10;
+}
+
+/* ── Coordinates / Status ── */
+.canvas-coords {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: 'Caveat', 'Inter', monospace;
+  font-weight: 600;
+  background: var(--surface);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px dashed var(--border);
+  opacity: 0.7;
+  transition: all var(--transition-fast);
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+}
+
+#canvasContainer:hover .canvas-coords {
+  opacity: 1;
+  border-style: solid;
+}
+
+/* ── Active Selection ── */
+.selection-box {
+  position: absolute;
+  border: 2px dashed var(--accent);
+  background: var(--accent-glow);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Text Input Overlay */
+.text-input-overlay {
+  position: absolute;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  outline: none;
+  padding: 0;
+  margin: 0;
+  font-family: 'Caveat', cursive;
+  line-height: 1.2;
+  resize: none;
+  overflow: hidden;
+  z-index: 30;
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
