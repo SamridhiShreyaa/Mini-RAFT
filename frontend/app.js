@@ -4,7 +4,7 @@ const canvas = new DrawingCanvas('canvasContainer');
 const controls = new ControlsBar('controlsBar');
 const stylePanel = new StylePanel('stylePanelContainer');
 const dashboard = new ClusterDashboard('dashboardContainer', GATEWAY_URL);
-const conn = createConnection(GATEWAY_URL);
+const conn = createConnection(GATEWAY_URL, { enableWebSocket: false });
 const tabSync = new TabSync();
 
 const DELETE_EVENT_TYPES = new Set(['delete', 'DELETE']);
@@ -184,8 +184,7 @@ async function checkGatewayHealth() {
 }
 
 loadStrokes();
-conn.socket.connect();
-conn.http.connect();
+conn.connect();
 dashboard.startAutoRefresh(3000);
 checkGatewayHealth();
 setInterval(checkGatewayHealth, 5000);

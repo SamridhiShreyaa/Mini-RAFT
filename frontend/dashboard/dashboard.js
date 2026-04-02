@@ -55,7 +55,8 @@ class ClusterDashboard {
   _updateUI() {
     if (!this.data) return;
 
-    const leaderName = this._extractName(this.data.leader);
+    const leaderReplica = (this.data.replicas || []).find(r => r.replica === this.data.leader);
+    const leaderName = this._getReplicaName(leaderReplica);
     const totalNodes = this.data.totalNodes || 0;
     const aliveCount = (this.data.replicas || []).filter(r => r.status === 'UP').length;
 
@@ -87,7 +88,7 @@ class ClusterDashboard {
     if (!this.data || !this.data.replicas) return '';
 
     return this.data.replicas.map(r => {
-      const name = this._extractName(r.replica);
+      const name = this._getReplicaName(r);
       const isDown = r.status !== 'UP';
       const role = isDown ? 'down' : (r.state || 'follower');
       const roleClass = role.toLowerCase();
@@ -99,6 +100,11 @@ class ClusterDashboard {
         </div>
       `;
     }).join('');
+  }
+
+  _getReplicaName(replica) {
+    if (!replica) return this._extractName(this.data?.leader);
+    return replica.node || this._extractName(replica.replica);
   }
 
   _extractName(url) {

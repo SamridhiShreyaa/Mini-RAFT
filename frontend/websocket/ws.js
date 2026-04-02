@@ -146,8 +146,9 @@ class HttpBridge {
   }
 }
 
-function createConnection(gatewayUrl) {
+function createConnection(gatewayUrl, options = {}) {
   const wsUrl = gatewayUrl.replace(/^http/, 'ws') + '/ws';
+  const enableWebSocket = options.enableWebSocket === true;
 
   const socket = new RaftSocket(wsUrl);
   const http = new HttpBridge(gatewayUrl);
@@ -168,7 +169,7 @@ function createConnection(gatewayUrl) {
     },
 
     send(data) {
-      if (socket.connected) {
+      if (enableWebSocket && socket.connected) {
         socket.send(data);
       } else {
         http.send(data);
@@ -200,7 +201,7 @@ function createConnection(gatewayUrl) {
     },
 
     get connected() {
-      return socket.connected || http.connected;
+      return (enableWebSocket && socket.connected) || http.connected;
     }
   };
 
@@ -216,6 +217,16 @@ function createConnection(gatewayUrl) {
 
   http.onStatusChange = (status) => {
     conn.emit('connection', { connected: status });
+  };
+
+  conn.connect = () => {
+    if (enableWebSocket) socket.connect();
+    http.connect();
+  };
+
+  conn.disconnect = () => {
+    if (enableWebSocket) socket.disconnect();
+    http.disconnect();
   };
 
   return conn;
