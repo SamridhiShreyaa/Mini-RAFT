@@ -1,0 +1,132 @@
+/* ═══════════════════════════════════════════════════════
+   CONTROLS BAR
+   Floating top toolbar
+   ═══════════════════════════════════════════════════════ */
+
+/* Container for toolbar to float it over canvas */
+#controlsBar {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--toolbar-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--transition-med);
+}
+
+.controls-bar .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  position: relative;
+}
+
+.controls-bar .btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+}
+
+/* Tooltip */
+.controls-bar .btn::after {
+  content: attr(title);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--surface-active);
+  color: var(--text);
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.controls-bar .btn:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(12px);
+}
+
+.controls-bar .btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+.controls-bar .btn:active {
+  transform: scale(0.92);
+}
+
+.controls-bar .btn.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.controls-bar .btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  border-color: transparent;
+}
+
+/* Special clear button */
+.controls-bar .btn.danger {
+  color: var(--red);
+}
+
+.controls-bar .btn.danger:hover {
+  background: var(--red-bg);
+  border-color: rgba(201, 112, 112, 0.4);
+}
+
+.controls-bar .separator {
+  width: 2px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 1px;
+  margin: 0 4px;
+}
+
+
+/* Quick style indicators */
+.controls-bar .color-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  pointer-events: none;
+}

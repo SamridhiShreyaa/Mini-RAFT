@@ -1,0 +1,186 @@
+/* ═══════════════════════════════════════════════════════
+   DASHBOARD / SIDEBAR
+   Cozy panel styling
+   ═══════════════════════════════════════════════════════ */
+
+.dashboard {
+  padding: 24px 20px;
+}
+
+.dashboard h2 {
+  font-size: 1.4rem;
+  color: var(--text);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 2px dashed var(--border);
+}
+
+.dashboard h2 .refresh-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--green);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.info-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Soft gleam effect */
+.info-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 30%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+  pointer-events: none;
+}
+
+.info-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  background: var(--surface-hover);
+}
+
+.info-card .label {
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.info-card .value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.info-card .value.value-muted {
+  color: var(--text-muted);
+}
+
+.info-card .value.leader {
+  color: var(--green);
+}
+
+.replica-list {
+  margin-top: 28px;
+}
+
+.replica-list h3 {
+  font-family: 'Caveat', cursive;
+  font-size: 1.3rem;
+  color: var(--text);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px dashed var(--border);
+}
+
+.replica-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.replica-item:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+}
+
+.replica-item .replica-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Cute server icon using Lucide SVG */
+.replica-item .replica-name .server-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.replica-item .replica-role {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+}
+
+.replica-item .replica-role.leader {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: rgba(123, 174, 127, 0.3);
+}
+
+.replica-item .replica-role.follower {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border-color: rgba(123, 160, 196, 0.3);
+}
+
+.replica-item .replica-role.down {
+  background: var(--red-bg);
+  color: var(--red);
+  border-color: rgba(201, 112, 112, 0.3);
+}
+
+.replica-item .replica-role.candidate {
+  background: var(--orange-bg);
+  color: var(--orange);
+  border-color: rgba(204, 168, 85, 0.3);
+}
+
+.dashboard-error {
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  color: var(--red);
+  padding: 12px 16px;
+  background: var(--red-bg);
+  border: 1px dashed var(--red);
+  border-radius: var(--radius-sm);
+  margin-top: 12px;
+  text-align: center;
+}
+
+.dashboard-updated-at {
+  margin-top: 12px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
