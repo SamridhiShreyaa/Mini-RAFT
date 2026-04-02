@@ -1,17 +1,16 @@
 const express = require('express');
 const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 // ✅ 5-node cluster
-const replicas = [
-  'http://replica:3001',   // leader node (initial)
-  'http://replica1:3002',
-  'http://replica2:3003',
-  'http://replica3:3004',
-  'http://replica4:3005'
-];
+// Use host.docker.internal to reach localhost services from inside Docker container
+// For local dev: host.docker.internal:3001-3005
+// For Docker Compose: replica, replica1, replica2, replica3, replica4
+const replicas = (process.env.REPLICAS || 'http://host.docker.internal:3001,http://host.docker.internal:3002,http://host.docker.internal:3003,http://host.docker.internal:3004,http://host.docker.internal:3005').split(',');
 
 let currentLeader = replicas[0];
 
@@ -23,7 +22,7 @@ async function discoverLeader() {
 
   for (let replica of replicas) {
     try {
-      const res = await axios.get(`${replica}/state`, { timeout: 1000 });
+      const res = await axios.get(`${replica}/state`, { timeout: 3000 });
 
       if (res.data.state === "leader") {
         currentLeader = replica;
@@ -32,7 +31,7 @@ async function discoverLeader() {
       }
 
     } catch (err) {
-      console.log(`❌ ${replica} not reachable`);
+      console.log(`❌ ${replica} not reachable:`, err.message);
     }
   }
 
@@ -50,14 +49,17 @@ app.get('/cluster-status', async (req, res) => {
 
   for (let replica of replicas) {
     try {
-      const r = await axios.get(`${replica}/status`, { timeout: 1000 });
+      const r = await axios.get(`${replica}/status`, { timeout: 3000 });
+      console.log(`✅ ${replica} responded:`, r.data);
 
       status.push({
         replica,
+        status: "UP",
         ...r.data
       });
 
-    } catch {
+    } catch (err) {
+      console.log(`⚠️ ${replica} /status failed:`, err.message);
       status.push({
         replica,
         status: "DOWN"
@@ -65,6 +67,7 @@ app.get('/cluster-status', async (req, res) => {
     }
   }
 
+  console.log("Final status:", status);
   res.json({
     timestamp: new Date(),
     leader: currentLeader,

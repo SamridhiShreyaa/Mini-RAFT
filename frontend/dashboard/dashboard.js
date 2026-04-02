@@ -57,7 +57,7 @@ class ClusterDashboard {
 
     const leaderName = this._extractName(this.data.leader);
     const totalNodes = this.data.totalNodes || 0;
-    const aliveCount = (this.data.replicas || []).filter(r => r.status !== 'DOWN').length;
+    const aliveCount = (this.data.replicas || []).filter(r => r.status === 'UP').length;
 
     const timeStr = this.lastUpdated
       ? this.lastUpdated.toLocaleTimeString()
@@ -88,7 +88,8 @@ class ClusterDashboard {
 
     return this.data.replicas.map(r => {
       const name = this._extractName(r.replica);
-      const role = r.status === 'DOWN' ? 'down' : (r.state || 'follower');
+      const isDown = r.status !== 'UP';
+      const role = isDown ? 'down' : (r.state || 'follower');
       const roleClass = role.toLowerCase();
 
       return `
