@@ -1,0 +1,212 @@
+/* ═══════════════════════════════════════════════════════
+   STYLE PANEL
+   Floating panel for color, stroke, opacity
+   ═══════════════════════════════════════════════════════ */
+
+#stylePanelContainer {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  z-index: 40;
+}
+
+.style-panel {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  width: 220px;
+  box-shadow: var(--shadow-lg);
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: opacity var(--transition-med), transform var(--transition-med);
+}
+
+.style-panel.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10px);
+}
+
+.style-section {
+  margin-bottom: 20px;
+}
+
+.style-section:last-child {
+  margin-bottom: 0;
+}
+
+.color-wheel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+}
+
+.color-wheel-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 46px;
+}
+
+.color-wheel {
+  width: 44px;
+  height: 30px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.color-wheel::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-wheel::-webkit-color-swatch {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.color-wheel:hover::-webkit-color-swatch {
+  border-color: var(--accent);
+}
+
+.style-label {
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Color Palette Grid */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.color-btn {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  background-color: transparent;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.color-btn:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-sm);
+}
+
+.color-btn.active {
+  border-color: var(--text);
+}
+
+.color-btn.active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  mix-blend-mode: difference;
+}
+
+/* Stroke Width Options */
+.stroke-width-grid {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stroke-btn {
+  flex: 1;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--surface-hover);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.stroke-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.stroke-btn.active {
+  border-color: var(--text);
+  background: var(--bg-subtle);
+}
+
+.stroke-line {
+  background: var(--text);
+  border-radius: 10px;
+  width: 60%;
+}
+
+.stroke-line.thin {
+  height: 2px;
+}
+
+.stroke-line.med {
+  height: 4px;
+}
+
+.stroke-line.bold {
+  height: 8px;
+}
+
+/* Opacity Slider */
+.opacity-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.opacity-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.opacity-slider::-webkit-slider-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -5px;
+  border: 2px solid var(--surface);
+}
+
+/* Transparent fill special button */
+.color-btn.transparent {
+  background:
+    linear-gradient(45deg, var(--border) 25%, transparent 25%, transparent 75%, var(--border) 75%, var(--border)),
+    linear-gradient(45deg, var(--border) 25%, transparent 25%, transparent 75%, var(--border) 75%, var(--border));
+  background-size: 10px 10px;
+  background-position: 0 0, 5px 5px;
+  background-color: var(--surface);
+}
