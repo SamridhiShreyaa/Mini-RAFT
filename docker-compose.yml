@@ -1,46 +1,86 @@
+# ============================================================
+#  Mini-RAFT  ·  Docker Compose
+#  5-node RAFT cluster  +  Smart Gateway
+# ============================================================
+
 services:
+
+  # ── Smart Gateway ──────────────────────────────────────────
   gateway:
     build: ./gateway
     ports:
       - "3000:3000"
+    environment:
+      - PORT=3000
+      - REPLICAS=http://replica1:5000,http://replica2:5000,http://replica3:5000,http://replica4:5000,http://replica5:5000
     depends_on:
-      - replica
       - replica1
       - replica2
       - replica3
       - replica4
+      - replica5
+    restart: unless-stopped
 
-  replica:
-    build: ./replica
-    environment:
-      - PORT=3001
-    ports:
-      - "3001:3001"
+  # ── RAFT Replicas ──────────────────────────────────────────
+  # All build from the project root so they can access shared/.
+  # Each gets a unique NODE_ID and knows its peers.
 
   replica1:
-    build: ./replica1
+    build:
+      context: .
+      dockerfile: replica/Dockerfile
     environment:
-      - PORT=3002
+      - NODE_ID=node1
+      - PORT=5000
+      - PEERS=http://replica2:5000,http://replica3:5000,http://replica4:5000,http://replica5:5000
     ports:
-      - "3002:3002"
+      - "3001:5000"
+    restart: unless-stopped
 
   replica2:
-    build: ./replica2
+    build:
+      context: .
+      dockerfile: replica/Dockerfile
     environment:
-      - PORT=3003
+      - NODE_ID=node2
+      - PORT=5000
+      - PEERS=http://replica1:5000,http://replica3:5000,http://replica4:5000,http://replica5:5000
     ports:
-      - "3003:3003"
+      - "3002:5000"
+    restart: unless-stopped
 
   replica3:
-    build: ./replica3
+    build:
+      context: .
+      dockerfile: replica/Dockerfile
     environment:
-      - PORT=3004
+      - NODE_ID=node3
+      - PORT=5000
+      - PEERS=http://replica1:5000,http://replica2:5000,http://replica4:5000,http://replica5:5000
     ports:
-      - "3004:3004"
+      - "3003:5000"
+    restart: unless-stopped
 
   replica4:
-    build: ./replica4
+    build:
+      context: .
+      dockerfile: replica/Dockerfile
     environment:
-      - PORT=3005
+      - NODE_ID=node4
+      - PORT=5000
+      - PEERS=http://replica1:5000,http://replica2:5000,http://replica3:5000,http://replica5:5000
     ports:
-      - "3005:3005"
+      - "3004:5000"
+    restart: unless-stopped
+
+  replica5:
+    build:
+      context: .
+      dockerfile: replica/Dockerfile
+    environment:
+      - NODE_ID=node5
+      - PORT=5000
+      - PEERS=http://replica1:5000,http://replica2:5000,http://replica3:5000,http://replica4:5000
+    ports:
+      - "3005:5000"
+    restart: unless-stopped

@@ -2,8 +2,14 @@ FROM python:3.10
 
 WORKDIR /app
 
-COPY . .
+# Copy both replica and shared modules from project root
+COPY replica/ ./replica/
+COPY shared/ ./shared/
 
-RUN pip install fastapi uvicorn
+# Install dependencies
+RUN pip install --no-cache-dir fastapi uvicorn requests pydantic
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001"]
+EXPOSE 5000
+
+# Run the real RAFT consensus server
+CMD ["sh", "-c", "uvicorn replica.consensus.server:app --host 0.0.0.0 --port ${PORT:-5000}"]
