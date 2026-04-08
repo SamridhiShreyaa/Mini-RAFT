@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Mini-RAFT Distributed Whiteboard — real-time collaborative canvas powered by RAFT consensus" />
+  <title>Mini-RAFT Whiteboard</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Styles (order matters) -->
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="canvas/canvas.css" />
+  <link rel="stylesheet" href="dashboard/dashboard.css" />
+  <link rel="stylesheet" href="controls/controls.css" />
+  <link rel="stylesheet" href="controls/style-panel.css" />
+
+  <style>
+    /* ── App Layout ── */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--text);
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+
+    header .logo .logo-icon {
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+    }
+
+    header .logo .logo-icon svg {
+      width: 28px;
+      height: 28px;
+      stroke-width: 2.5;
+    }
+
+    header .logo .logo-accent {
+      color: var(--accent);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* ── Status Pill ── */
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      transition: all var(--transition-fast);
+    }
+
+    .status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--red);
+      transition: all var(--transition-med);
+    }
+
+    .status-pill.connected .dot {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .status-pill.connected {
+      border-color: var(--green);
+      color: var(--text);
+    }
+
+    /* ── Theme Toggle ── */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      transition: all var(--transition-fast);
+      font-size: 0.9rem;
+    }
+
+    .theme-toggle .toggle-icon {
+      display: flex;
+      align-items: center;
+    }
+
+    .theme-toggle .toggle-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent);
+      background: var(--surface-active);
+    }
+
+    .theme-toggle .toggle-track {
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: var(--border);
+      position: relative;
+      transition: background var(--transition-med);
+    }
+
+    .theme-toggle .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--canvas-bg);
+      transition: transform var(--transition-med);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    [data-theme="dark"] .theme-toggle .toggle-thumb {
+      transform: translateX(16px);
+    }
+
+    [data-theme="dark"] .theme-toggle .toggle-track {
+      background: var(--accent);
+    }
+
+    /* ── Main Layout ── */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Canvas Area ── */
+    .canvas-area {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      border-right: 2px solid var(--border);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--sidebar-bg);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <!-- HEADER -->
+    <header>
+      <div class="logo">
+        <span class="logo-icon"><i data-lucide="palette"></i></span>
+        <span><span class="logo-accent">Mini-RAFT</span> Whiteboard</span>
+      </div>
+      <div class="header-right">
+        <div class="status-pill" id="connectionStatus">
+          <div class="dot"></div>
+          <span>Disconnected</span>
+        </div>
+        <div class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+          <span class="toggle-icon"><i data-lucide="sun"></i></span>
+          <div class="toggle-track">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-icon"><i data-lucide="moon"></i></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="app-layout">
+      <div class="canvas-area">
+        <div id="controlsBar"></div>
+        <div id="canvasContainer"></div>
+        <div id="stylePanelContainer"></div>
+      </div>
+      <div class="sidebar">
+        <div id="dashboardContainer"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="theme-toggle.js"></script>
+  <script src="canvas/canvas.js"></script>
+  <script src="websocket/ws.js"></script>
+  <script src="dashboard/dashboard.js"></script>
+  <script src="controls/controls.js"></script>
+  <script src="controls/style-panel.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Initialize icons for any initially loaded content
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

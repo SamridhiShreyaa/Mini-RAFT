@@ -1,0 +1,377 @@
+/* ── Light Mode (default) ── */
+:root,
+[data-theme="light"] {
+  --bg: #FDF6EC;
+  --bg-subtle: #F9F0E3;
+  --surface: #F5EDE0;
+  --surface-hover: #EDE3D3;
+  --surface-active: #E5D9C6;
+
+  --border: #D4BC9A;
+  --border-strong: #C4A882;
+  --border-frame: #B89B78;
+
+  --text: #4A3728;
+  --text-muted: #8B7355;
+  --text-light: #A89478;
+
+  --accent: #C4886B;
+  --accent-hover: #B5775C;
+  --accent-glow: rgba(196, 136, 107, 0.25);
+
+  --green: #7BAE7F;
+  --green-bg: rgba(123, 174, 127, 0.15);
+  --red: #C97070;
+  --red-bg: rgba(201, 112, 112, 0.15);
+  --orange: #CCA855;
+  --orange-bg: rgba(204, 168, 85, 0.15);
+  --blue: #7BA0C4;
+  --blue-bg: rgba(123, 160, 196, 0.15);
+
+  --canvas-bg: #FFFCF7;
+  --canvas-border: #C4A882;
+  --canvas-shadow: rgba(139, 115, 85, 0.15);
+
+  --toolbar-bg: rgba(245, 237, 224, 0.95);
+  --sidebar-bg: #F5EDE0;
+
+  --shadow-sm: 0 2px 8px rgba(139, 115, 85, 0.08);
+  --shadow-md: 0 4px 16px rgba(139, 115, 85, 0.12);
+  --shadow-lg: 0 8px 32px rgba(139, 115, 85, 0.16);
+
+  /* Sticky note colors */
+  --sticky-yellow: #FFF3C4;
+  --sticky-pink: #FFE0E0;
+  --sticky-green: #D4F0D4;
+  --sticky-blue: #D4E8F7;
+  --sticky-purple: #E8D4F0;
+  --sticky-orange: #FFE4CC;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
+  /* Decorative vine color */
+  --vine-color: #A08B60;
+  --vine-leaf: #8BA870;
+
+  --transition-fast: 0.15s ease;
+  --transition-med: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] {
+  --bg: #1E1610;
+  --bg-subtle: #241C14;
+  --surface: #2C2218;
+  --surface-hover: #3A2E22;
+  --surface-active: #48382C;
+
+  --border: #5A4636;
+  --border-strong: #6E5842;
+  --border-frame: #7A644C;
+
+  --text: #E8DDD0;
+  --text-muted: #9B8B78;
+  --text-light: #7A6C5C;
+
+  --accent: #D49A7C;
+  --accent-hover: #C48A6C;
+  --accent-glow: rgba(212, 154, 124, 0.25);
+
+  --green: #8BBF8F;
+  --green-bg: rgba(139, 191, 143, 0.12);
+  --red: #D48080;
+  --red-bg: rgba(212, 128, 128, 0.12);
+  --orange: #D4B866;
+  --orange-bg: rgba(212, 184, 102, 0.12);
+  --blue: #8BB0D4;
+  --blue-bg: rgba(139, 176, 212, 0.12);
+
+  --canvas-bg: #2A2018;
+  --canvas-border: #6E5842;
+  --canvas-shadow: rgba(0, 0, 0, 0.3);
+
+  --toolbar-bg: rgba(44, 34, 24, 0.95);
+  --sidebar-bg: #2C2218;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.35);
+
+  --sticky-yellow: #4A4228;
+  --sticky-pink: #4A2828;
+  --sticky-green: #284A28;
+  --sticky-blue: #283A4A;
+  --sticky-purple: #3A284A;
+  --sticky-orange: #4A3828;
+
+  --vine-color: #6E5842;
+  --vine-leaf: #5A7050;
+}
+
+/* ── Global Reset ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Theme Transition ── */
+body,
+body * {
+  transition:
+    background-color var(--transition-med),
+    border-color var(--transition-med),
+    color var(--transition-med),
+    box-shadow var(--transition-med);
+}
+
+/* Don't transition the canvas itself */
+canvas,
+.canvas-render-layer {
+  transition: none !important;
+}
+
+/* ── Typography ── */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+.panel-title {
+  font-family: 'Caveat', 'Inter', cursive;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── Scrollbar Styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes float-gentle {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes vine-sway {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+.animate-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* ── Decorative Vine Border (CSS only) ── */
+.vine-border {
+  position: relative;
+}
+
+.vine-border::before,
+.vine-border::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Top vine */
+.vine-border::before {
+  top: -2px;
+  left: 20px;
+  right: 20px;
+  height: 18px;
+  background:
+    radial-gradient(ellipse 8px 6px at 10% 50%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 6px 8px at 25% 30%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 8px 6px at 40% 60%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 6px 7px at 55% 35%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 7px 6px at 70% 55%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 8px 7px at 85% 40%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 6px 6px at 95% 50%, var(--vine-leaf) 45%, transparent 50%),
+    linear-gradient(to right, var(--vine-color) 1px, transparent 1px);
+  background-size: 100% 100%;
+  opacity: 0.6;
+  animation: vine-sway 8s ease-in-out infinite;
+}
+
+/* Right vine */
+.vine-border::after {
+  top: 20px;
+  right: -2px;
+  bottom: 20px;
+  width: 18px;
+  background:
+    radial-gradient(ellipse 6px 8px at 50% 10%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 8px 6px at 30% 25%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 6px 8px at 60% 40%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 7px 6px at 35% 55%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 6px 7px at 55% 70%, var(--vine-leaf) 45%, transparent 50%),
+    radial-gradient(ellipse 8px 6px at 40% 85%, var(--vine-leaf) 45%, transparent 50%),
+    linear-gradient(to bottom, var(--vine-color) 1px, transparent 1px);
+  background-size: 100% 100%;
+  opacity: 0.6;
+  animation: vine-sway 10s ease-in-out infinite reverse;
+}
+
+/* ── Corner Decorations ── */
+.corner-decor {
+  position: relative;
+}
+
+.corner-decor .corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--border-frame);
+  pointer-events: none;
+  opacity: 0.6;
+  z-index: 11;
+}
+
+.corner-decor .corner.tl {
+  top: 6px;
+  left: 6px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+  border-top-left-radius: 4px;
+}
+
+.corner-decor .corner.tr {
+  top: 6px;
+  right: 6px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  border-top-right-radius: 4px;
+}
+
+.corner-decor .corner.bl {
+  bottom: 6px;
+  left: 6px;
+  border-bottom: 2px solid;
+  border-left: 2px solid;
+  border-bottom-left-radius: 4px;
+}
+
+.corner-decor .corner.br {
+  bottom: 6px;
+  right: 6px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+  border-bottom-right-radius: 4px;
+}
+
+/* ── Quorum Softlock Overlay ── */
+#quorumOverlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(253, 246, 236, 0.85); /* var(--bg) with opacity */
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+[data-theme="dark"] #quorumOverlay {
+  background: rgba(30, 22, 16, 0.85);
+}
+.quorum-alert {
+  background: var(--surface);
+  border: 2px solid var(--red);
+  border-radius: var(--radius);
+  padding: 30px 40px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  max-width: 450px;
+}
+.quorum-alert svg {
+  color: var(--red);
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+}
+.quorum-alert h1 {
+  font-family: 'Caveat', cursive;
+  font-size: 2.2rem;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.quorum-alert p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
