@@ -59,6 +59,10 @@ class ClusterDashboard {
     const leaderName = this._getReplicaName(leaderReplica);
     const totalNodes = this.data.totalNodes || 0;
     const aliveCount = (this.data.replicas || []).filter(r => r.status === 'UP').length;
+    
+    const majority = Math.floor(totalNodes / 2) + 1;
+    const hasQuorum = aliveCount >= majority;
+    document.dispatchEvent(new CustomEvent('quorum-status', { detail: { hasQuorum, aliveCount, totalNodes, majority } }));
 
     const timeStr = this.lastUpdated
       ? this.lastUpdated.toLocaleTimeString()

@@ -1,7 +1,7 @@
 import os
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel
 
 from .node import RaftNode
@@ -21,6 +21,12 @@ PEERS = [peer.strip() for peer in os.getenv("PEERS", "").split(",") if peer.stri
 logger = ElectionLogger(NODE_ID)
 node = RaftNode(NODE_ID, PEERS, logger=logger)
 logger.info("server_started", node_id=NODE_ID, peers=PEERS)
+
+@app.middleware("http")
+async def suspend_middleware(request: Request, call_next):
+    if getattr(node, "suspended", False) and request.url.path not in ["/resume", "/crash", "/docs", "/openapi.json"]:
+        return Response(status_code=503)
+    return await call_next(request)
 
 # Teammate 2: Replicated log integration (including undo/redo)
 log_store = LogStore(NODE_ID, enable_hashing=True)
@@ -88,6 +94,21 @@ def append_entries(req: AppendEntriesRequest) -> dict:
     logger.info("append_entries_handled", success=response["success"], last_index=response["last_log_index"])
     return response
 
+
+@app.post("/crash")
+def crash_node() -> dict:
+    """
+    Simulate node crash via memory pause instead of os._exit(1)
+    so we can restart it programmtically via /resume.
+    """
+    node.suspend()
+    return {"success": True}
+
+@app.post("/resume")
+def resume_node() -> dict:
+    """Simulate node reboot"""
+    node.resume()
+    return {"success": True}
 
 @app.get("/state")
 def get_state() -> dict:

@@ -27,6 +27,7 @@ class RaftNode:
 
         self.votes_received = 0
         self.lock = threading.Lock()
+        self.suspended = False
 
         self.logger.info(
             "node_initialized",
@@ -45,6 +46,8 @@ class RaftNode:
     def run_election_loop(self) -> None:
         while True:
             time.sleep(0.05)
+            if self.suspended:
+                continue
             with self.lock:
                 should_start = self.state != NodeState.LEADER and self.election_timer.expired()
             if should_start:
@@ -116,6 +119,8 @@ class RaftNode:
     def run_heartbeat_loop(self) -> None:
         while True:
             time.sleep(self.heartbeat_interval)
+            if self.suspended:
+                continue
             with self.lock:
                 if self.state != NodeState.LEADER:
                     continue
@@ -218,3 +223,18 @@ class RaftNode:
             self.election_timer.reset()
             self.logger.info("heartbeat_accepted", term=self.current_term, leader_id=leader_id)
             return {"term": self.current_term, "success": True, "status": "ok"}
+
+    def suspend(self) -> None:
+        with self.lock:
+            self.suspended = True
+            # Simulate volatile state memory wipe
+            self.state = NodeState.FOLLOWER
+            self.leader_id = None
+            self.voted_for = None
+            self.votes_received = 0
+
+    def resume(self) -> None:
+        with self.lock:
+            self.suspended = False
+            self.election_timer.reset()
+

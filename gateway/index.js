@@ -203,11 +203,18 @@ app.get('/cluster-status', async (_req, res) => {
   const status = [];
 
   for (const replica of REPLICAS) {
+    const cached = clusterState.find(c => c.replica === replica);
     try {
       const r = await axios.get(`${replica}/status`, {
         timeout: REQUEST_TIMEOUT_MS,
       });
-      status.push({ replica, status: 'UP', ...r.data });
+      status.push({ 
+        replica, 
+        status: 'UP', 
+        state: cached && !cached.error ? cached.state : 'follower',
+        term: cached && !cached.error ? cached.term : -1,
+        ...r.data 
+      });
     } catch {
       status.push({ replica, status: 'DOWN' });
     }
@@ -242,6 +249,34 @@ app.post('/send', async (req, res) => {
     res.json({ success: true, message: 'Sent to leader' });
   } else {
     res.status(503).json({ success: false, error: result.error });
+  }
+});
+
+app.post('/crash', async (req, res) => {
+  const { replica } = req.body;
+  if (!replica || !REPLICAS.includes(replica)) {
+    return res.status(400).json({ success: false, error: 'Invalid replica URL' });
+  }
+  log(`[CRASH] Sending manual crash signal to ${replica}`);
+  try {
+    axios.post(`${replica}/crash`, {}, { timeout: 1000 }).catch(() => {});
+    res.json({ success: true, message: `Crash signal sent to ${replica}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/resume', async (req, res) => {
+  const { replica } = req.body;
+  if (!replica || !REPLICAS.includes(replica)) {
+    return res.status(400).json({ success: false, error: 'Invalid replica URL' });
+  }
+  log(`[SYSTEM] Sending resume signal to ${replica}`);
+  try {
+    await axios.post(`${replica}/resume`, {}, { timeout: 1500 });
+    res.json({ success: true, message: `Resume signal sent to ${replica}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
