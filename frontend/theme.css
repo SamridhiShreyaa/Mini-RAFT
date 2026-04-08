@@ -333,3 +333,45 @@ h3,
   border-right: 2px solid;
   border-bottom-right-radius: 4px;
 }
+
+/* ── Quorum Softlock Overlay ── */
+#quorumOverlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(253, 246, 236, 0.85); /* var(--bg) with opacity */
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+[data-theme="dark"] #quorumOverlay {
+  background: rgba(30, 22, 16, 0.85);
+}
+.quorum-alert {
+  background: var(--surface);
+  border: 2px solid var(--red);
+  border-radius: var(--radius);
+  padding: 30px 40px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  max-width: 450px;
+}
+.quorum-alert svg {
+  color: var(--red);
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+}
+.quorum-alert h1 {
+  font-family: 'Caveat', cursive;
+  font-size: 2.2rem;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.quorum-alert p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1.5;
+}

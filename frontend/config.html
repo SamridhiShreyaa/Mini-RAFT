@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini-RAFT Config</title>
+
+  <!-- Fonts and Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Base Styling -->
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="dashboard/dashboard.css" />
+  <style>
+    body, html { 
+      margin: 0; padding: 0; 
+      background: var(--canvas-bg); color: var(--text); 
+      font-family: 'Inter', sans-serif; 
+    }
+    header { 
+      display: flex; align-items: center; justify-content: space-between; 
+      padding: 10px 24px; background: var(--surface); border-bottom: 2px solid var(--border); 
+    }
+    .logo { 
+      display: flex; align-items: center; gap: 10px; 
+      font-family: 'Caveat', cursive; font-weight: 700; font-size: 1.5rem; 
+    }
+    .logo-accent { color: var(--accent); }
+    
+    .config-container { padding: 40px; max-width: 800px; margin: 0 auto; }
+    .dashboard-title { font-size: 2.2rem; margin-bottom: 30px; font-family: 'Caveat', cursive; color: var(--text); }
+    
+    .replica-item {
+        display: flex; align-items: center; justify-content: space-between; padding: 20px 24px;
+        background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-sm);
+        margin-bottom: 16px; box-shadow: var(--shadow-sm);
+        transition: border-color var(--transition-fast), background var(--transition-fast);
+    }
+    .replica-item:hover {
+        border-color: var(--border-strong);
+        background: var(--surface-hover);
+    }
+    .replica-info { display: flex; align-items: center; gap: 16px; }
+    .replica-name { font-size: 1.1rem; font-weight: 600; }
+    .replica-term { color: var(--text-muted); font-size: 0.9rem; font-family: monospace; }
+    
+    .crash-btn {
+        background: var(--red); color: white; border: none; padding: 10px 18px; border-radius: 8px;
+        cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;
+        transition: opacity var(--transition-fast);
+    }
+    .crash-btn:hover { opacity: 0.85; }
+    .crash-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
+    
+    .crash-btn svg { width: 18px; height: 18px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="logo-icon"><i data-lucide="settings-2"></i></span>
+      <span><span class="logo-accent">Mini-RAFT</span> Config</span>
+    </div>
+    <a href="/" style="color: var(--text); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+      <i data-lucide="arrow-left" style="width: 18px;"></i> Back to Canvas
+    </a>
+  </header>
+  
+  <div class="config-container">
+    <h1 class="dashboard-title">Manual Cluster Control</h1>
+    <div id="nodesList">
+      <div style="padding: 20px; color: var(--text-muted);">Fetching cluster state...</div>
+    </div>
+  </div>
+
+  <script src="theme-toggle.js"></script>
+  <script>
+    const GATEWAY_URL = 'http://localhost:3000';
+    let isFetching = false;
+    
+    async function fetchStatus() {
+      if (isFetching) return;
+      isFetching = true;
+      try {
+        const res = await fetch(`${GATEWAY_URL}/cluster-status`, { signal: AbortSignal.timeout(3000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        renderNodes(data);
+      } catch (err) {
+        const list = document.getElementById('nodesList');
+        // Only show error if we haven't rendered anything yet to prevent blinking
+        if (!list.innerHTML.includes('replica-item')) {
+          list.innerHTML = `<div style="color: var(--red); padding: 20px; border: 1px dashed var(--red); border-radius: 8px; background: var(--red-bg);">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+              <i data-lucide="triangle-alert"></i> Gateway Unreachable
+            </div>
+            <div style="margin-top: 8px; font-size: 0.9rem;">${err.message}</div>
+          </div>`;
+          lucide.createIcons();
+        }
+      } finally {
+        isFetching = false;
+      }
+    }
+    
+    function renderNodes(data) {
+      if (!data || !data.replicas) return;
+      
+      const html = data.replicas.map(r => {
+        const name = r.node || extractName(r.replica);
+        const isDown = r.status !== 'UP';
+        const role = isDown ? 'down' : (r.state || 'follower');
+        const roleClass = role.toLowerCase();
+        
+        return `
+          <div class="replica-item">
+            <div class="replica-info">
+              <i data-lucide="server" style="color: var(--text-muted);"></i>
+              <strong class="replica-name">${name}</strong>
+              <span class="replica-term">Term: ${r.term && r.term !== -1 ? r.term : '-'}</span>
+              <span class="replica-role ${roleClass}">${role}</span>
+            </div>
+            ${isDown 
+              ? `<button class="crash-btn" style="background: var(--green);" onclick="resumeNode('${r.replica}')"><i data-lucide="power"></i> Restart</button>`
+              : `<button class="crash-btn" onclick="crashNode('${r.replica}')"><i data-lucide="power-off"></i> Crash</button>`}
+          </div>
+        `;
+      }).join('');
+      
+      document.getElementById('nodesList').innerHTML = html;
+      lucide.createIcons();
+    }
+    
+    async function crashNode(replicaUrl) {
+      try {
+        await fetch(`${GATEWAY_URL}/crash`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ replica: replicaUrl })
+        });
+        fetchStatus();
+      } catch (err) {
+        alert('Failed to send crash signal: ' + err.message);
+      }
+    }
+    
+    async function resumeNode(replicaUrl) {
+      try {
+        await fetch(`${GATEWAY_URL}/resume`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ replica: replicaUrl })
+        });
+        fetchStatus();
+      } catch (err) {
+        alert('Failed to send resume signal: ' + err.message);
+      }
+    }
+    
+    function extractName(url) {
+        if (!url) return 'unknown';
+        try { return new URL(url).hostname; } 
+        catch { return url.replace(/https?:\/\//, '').split(':')[0]; }
+    }
+
+    // Initialize theme if needed
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    fetchStatus();
+    setInterval(fetchStatus, 1500);
+    lucide.createIcons();
+  </script>
+</body>
+</html>

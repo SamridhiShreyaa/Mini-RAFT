@@ -188,3 +188,39 @@ conn.connect();
 dashboard.startAutoRefresh(3000);
 checkGatewayHealth();
 setInterval(checkGatewayHealth, 5000);
+
+// -------------------------------------------------------------
+// Cluster Quorum Softlock
+// -------------------------------------------------------------
+
+document.addEventListener('quorum-status', (e) => {
+  const { hasQuorum, aliveCount, totalNodes, majority } = e.detail;
+  const overlayId = 'quorumOverlay';
+  let overlay = document.getElementById(overlayId);
+  const canvasArea = document.querySelector('.canvas-area');
+  
+  if (!hasQuorum) {
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = overlayId;
+      overlay.innerHTML = `
+        <div class="quorum-alert animate-in">
+          <i data-lucide="alert-triangle"></i>
+          <h1>Cluster Softlocked</h1>
+          <p>The cluster does not have a quorum (${aliveCount} out of ${totalNodes} nodes online).</p>
+          <p style="margin-top: 8px;">Requires at least ${majority} nodes to safely progress.</p>
+        </div>
+      `;
+      canvasArea.appendChild(overlay);
+      canvasArea.style.pointerEvents = 'none'; // Lock canvas
+      if (window.lucide) window.lucide.createIcons();
+    } else {
+      overlay.querySelector('p').innerText = `The cluster does not have a quorum (${aliveCount} out of ${totalNodes} nodes online).`;
+    }
+  } else {
+    if (overlay) {
+      overlay.remove();
+      canvasArea.style.pointerEvents = 'auto';
+    }
+  }
+});
