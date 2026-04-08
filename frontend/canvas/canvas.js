@@ -144,7 +144,11 @@ class DrawingCanvas {
   }
 
   _getStrokeColor(el) {
-    return el.strokeColor || el.color || this.currentStrokeColor;
+    // Return element's color, don't fall back to currentStrokeColor (which would change past elements)
+    if (el.strokeColor) return el.strokeColor;
+    if (el.color) return el.color;
+    // Only use default if element truly has no color (shouldn't happen for normalized elements)
+    return getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#4A3728';
   }
 
   _getFillColor(el) {
@@ -160,7 +164,7 @@ class DrawingCanvas {
     return value;
   }
 
-  _materializeColor(value, fallback = this.currentStrokeColor) {
+  _materializeColor(value, fallback = '#4A3728') {
     if (!value) return fallback;
     if (value === 'transparent') return value;
     return this._resolveCanvasColor(value, fallback);
@@ -230,21 +234,20 @@ class DrawingCanvas {
     const pos = this._getPos(e);
     
     if (this.currentTool === 'select') {
-      // Find element to select/drag
+      // Find element to select
       const hit = this._hitTest(pos);
       if (hit) {
         this.selectedElement = hit.id;
-        this.isDragging = true;
-        const bounds = this._getElementBounds(hit);
-        this.dragOffset = {
-          x: pos.x - bounds.x,
-          y: pos.y - bounds.y
-        };
-        // Bring to front
-        this.elements = [...this.elements.filter(el => el.id !== hit.id), this._cloneElement(hit)];
+        // Store initial position for potential drag
+        this.dragStartPos = pos;
+        this.dragElement = this._cloneElement(hit);
+        this.isDragging = false; // Wait for mouse move to start actual drag
         if (this.onSelect) this.onSelect(hit);
       } else {
         this.selectedElement = null; // Clicked on empty space
+        this.isDragging = false;
+        this.dragStartPos = null;
+        this.dragElement = null;
         if (this.onSelect) this.onSelect(null);
       }
       this.redraw();
@@ -297,11 +300,32 @@ class DrawingCanvas {
     const pos = this._getPos(e);
     this.coordsEl.textContent = `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
 
+    // Check if we should START dragging (mouse move detected)
+    if (this.dragStartPos && this.selectedElement && !this.isDragging && this.currentTool === 'select') {
+      const dx = Math.abs(pos.x - this.dragStartPos.x);
+      const dy = Math.abs(pos.y - this.dragStartPos.y);
+      // Only start drag if moved more than 2 pixels
+      if (dx > 2 || dy > 2) {
+        this.isDragging = true;
+        const dragEl = this.dragElement;
+        const bounds = this._getElementBounds(dragEl);
+        this.dragOffset = {
+          x: this.dragStartPos.x - bounds.x,
+          y: this.dragStartPos.y - bounds.y
+        };
+        // Bring to front now during actual drag
+        this.elements = [...this.elements.filter(el => el.id !== this.selectedElement), dragEl];
+      }
+    }
+
     if (this.isDragging && this.selectedElement) {
       const el = this.elements.find(e => e.id === this.selectedElement);
       if (el) {
-        const dx = pos.x - this.dragOffset.x - el.x;
-        const dy = pos.y - this.dragOffset.y - el.y;
+        const bounds = this._getElementBounds(el);
+        const dx = pos.x - this.dragOffset.x - bounds.x;
+        const dy = pos.y - this.dragOffset.y - bounds.y;
+
+        if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
 
         this.elements = this.elements.map(item => (
           item.id === this.selectedElement ? this._moveElement(item, dx, dy) : item
@@ -328,6 +352,8 @@ class DrawingCanvas {
   }
 
   _onUp(e) {
+    this.dragStartPos = null;
+    this.dragElement = null;
     if (this.isDragging) {
       this.isDragging = false;
       const el = this.elements.find(el => el.id === this.selectedElement);
@@ -437,7 +463,7 @@ class DrawingCanvas {
     
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
-    el.style.color = isEdit ? (posOrEl.strokeColor || posOrEl.color || this.currentStrokeColor) : this.currentStrokeColor;
+    el.style.color = isEdit ? (posOrEl.strokeColor || posOrEl.color || '#4A3728') : this.currentStrokeColor;
     
     if (type === 'sticky') {
       el.style.width = isEdit ? `${posOrEl.width}px` : '150px';
@@ -487,7 +513,8 @@ class DrawingCanvas {
             posOrEl.width = el.offsetWidth;
             posOrEl.height = el.offsetHeight;
           }
-          posOrEl.strokeColor = this._materializeColor(posOrEl.strokeColor || posOrEl.color || this.currentStrokeColor);
+          // Preserve the element's original color, don't use current tool color
+          posOrEl.strokeColor = this._materializeColor(posOrEl.strokeColor || posOrEl.color || '#4A3728');
           if (posOrEl.fillColor && posOrEl.fillColor !== 'transparent') {
             posOrEl.fillColor = this._materializeColor(posOrEl.fillColor, 'transparent');
           }
@@ -745,27 +772,43 @@ class DrawingCanvas {
   }
 
   setColor(c) { 
+    // Always update tool default for future strokes
     this.currentStrokeColor = c;
     this.color = c;
-    this._updateSelectedStyle('strokeColor', c);
+    // Also update the selected element if there is one
+    if (this.selectedElement) {
+      this._updateSelectedStyle('strokeColor', c);
+    }
   }
 
   setLineWidth(w) { 
+    // Always update tool default for future strokes
     this.currentStrokeWidth = w;
     this.lineWidth = w;
-    this._updateSelectedStyle('strokeWidth', w);
+    // Also update the selected element if there is one
+    if (this.selectedElement) {
+      this._updateSelectedStyle('strokeWidth', w);
+    }
   }
 
   setFillColor(c) {
+    // Always update tool default for future strokes
     this.currentFillColor = c;
     this.fillColor = c;
-    this._updateSelectedStyle('fillColor', c);
+    // Also update the selected element if there is one
+    if (this.selectedElement) {
+      this._updateSelectedStyle('fillColor', c);
+    }
   }
 
   setOpacity(o) {
+    // Always update tool default for future strokes
     this.currentOpacity = o;
     this.opacity = o;
-    this._updateSelectedStyle('opacity', o);
+    // Also update the selected element if there is one
+    if (this.selectedElement) {
+      this._updateSelectedStyle('opacity', o);
+    }
   }
 
   _updateSelectedStyle(prop, val) {
