@@ -1,0 +1,234 @@
+Teammate 1 - Consensus + Partition Handling (Control
+Plane)
+Owns cluster correctness
+
+Responsibilities
+RAFT states: Follower / Candidate / Leader
+Election logic (timeouts, quorum, retries)
+Heartbeats
+Term management
+Leader failover
+
+Bonus
+Network partition resolution (split-brain handling)
+Dynamic quorum (supports 3 & 4 replicas)
+
+Owns
+replica/consensus/
+tests/chaos/networkPartition.test.ts
+shared/logger.ts (lead for election logs)
+
+Teammate 2 — Log Replication + Undo/Redo (Data
+Plane)
+Owns data correctness and event system
+
+Responsibilities
+AppendEntries RPC
+Append-only log
+Commit logic (majority quorum)
+Ordering guarantees
+Idempotency
+
+Bonus
+Undo/Redo via log compensation
+Log integrity validation (optional hashing)
+
+Owns
+replica/log/
+replica/log/undoManager.ts
+tests/replication.test.ts
+
+Teammate 3 — Recovery, Replication Safety + Resilience
+Layer
+Owns system survival and correctness under failure
+
+Responsibilities
+/sync-log
+Restart recovery
+Catch-up protocol
+Log mismatch resolution
+
+Advanced Cloud Responsibilities
+PrevLogIndex / PrevLogTerm validation
+AppendEntries rejection on inconsistency
+Replication safety guarantees
+Commit validation (only majority committed entries applied)
+State machine safety (no overwrite of committed logs)
+Log reconciliation after failures
+Consistency verification across replicas
+
+Bonus
+Network fault simulation (drop, delay, reorder RPCs)
+Chaos testing:
+
+tests/chaos/
+├── killLeader.test.ts
+├── restartReplica.test.ts
+├── multiFailure.test.ts
+├── networkPartition.test.ts
+
+Owns
+replica/recovery/
+replica/recovery/consistencyChecker.ts
+replica/recovery/reconciliationEngine.ts
+replica/rpc/networkMiddleware.ts
+tests/failover.test.ts
+tests/chaos/
+
+Teammate 4 — Infrastructure + Gateway + Cloud
+Deployment (Platform Layer)
+Owns real-world execution
+
+Responsibilities
+WebSocket Gateway
+Leader routing and failover
+Broadcast committed events
+Docker and networking
+
+Bonus
+Scaling
+replica1/ replica2/ replica3/ replica4/
+
+Cloud Deployment
+AWS EC2 or GCP VM
+Public endpoint exposure
+
+Zero-Downtime Reload
+Bind mounts
+Graceful restart
+Automatic rejoin to cluster
+
+Monitoring API (Backend only)
+GET /cluster-status
+
+Owns
+gateway/
+infra/
+docker-compose.yml
+replica1/ replica2/ replica3/ replica4/
+
+Teammate 5 — Frontend + Dashboard + Demo Layer
+(Non-Cloud)
+Owns all non-cloud work
+
+Responsibilities
+Drawing UI
+Canvas rendering
+Mouse/touch drawing
+Smooth rendering without flicker
+
+WebSocket Client
+Connect to gateway
+Send strokes
+Receive updates
+
+Monitoring Dashboard (UI)
+Uses backend API:
+
+GET /cluster-status
+
+Displays:
+Current leader
+Term
+Log size
+Replica count
+
+Undo/Redo UI
+UI controls
+Calls backend undo/redo APIs
+
+Demo Experience
+Multi-tab simulation
+Clean UI
+Smooth failover visualization
+
+Owns
+frontend/
+├── canvas/
+├── websocket/
+├── dashboard/
+└── controls/
+
+FINAL REPO STRUCTURE
+distributed-drawing-board/
+│
+├── gateway/
+├── replica/
+│
+├── consensus/
+│
+├── log/
+│
+├── recovery/
+│
+├── state/
+│
+└── rpc/
+│
+
+├── replica1/
+├── replica2/
+├── replica3/
+├── replica4/
+│
+├── infra/
+├── tests/
+├── shared/
+│
+├── frontend/
+│
+├── canvas/
+│
+├── websocket/
+│
+├── dashboard/
+│
+└── controls/
+│
+├── docs/
+├── docker-compose.yml
+└── README.md
+
+CONCEPTS
+Teammate
+
+Concepts Used
+
+Teammate 1
+(Consensus / Control
+Plane)
+
+RAFT consensus, leader election, quorum, term-based
+coordination, heartbeats, split-brain resolution, distributed
+coordination, fault tolerance
+
+Teammate 2 (Log
+Replication / Data
+Plane)
+
+Distributed logs, append-only log, event sourcing, log replication,
+strong consistency, commit index, ordering guarantees,
+idempotency, compensation-based undo/redo
+
+Teammate 3 (Recovery
+/ Resilience)
+
+Fault recovery, state synchronization, log reconciliation,
+replication safety, consistency verification, self-healing systems,
+high availability, chaos engineering
+
+Teammate 4
+(Infrastructure /
+Platform Layer)
+
+Containerization, microservices, service discovery, load
+balancing, zero-downtime deployment, scalability, cloud
+deployment, observability APIs
+
+Teammate 5 (Frontend
+/ Client Layer)
+
+WebSockets, client-server architecture, real-time rendering, UI
+state synchronization, dashboard visualization
+
+
