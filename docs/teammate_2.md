@@ -23,6 +23,7 @@ sequenceDiagram
     Follower2-->>Leader: ACK
     Leader->>LocalLog: Mark Committed (Majority)
     Leader->>Follower1: AppendEntries(commitIndex updated)
+    Leader->>Follower2: AppendEntries(commitIndex updated)
 ```
 
 ## Folders & Files

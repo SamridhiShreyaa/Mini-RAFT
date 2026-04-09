@@ -11,11 +11,10 @@ class CommitManager:
     def __init__(self, node_id: str, peers: list[str]) -> None:
         self.node_id = node_id
         self.peers = peers
-        self.total_nodes = len(peers) + 1  # Include self
+        self.total_nodes = len(peers) + 1
         self.majority = (self.total_nodes // 2) + 1
 
-        # Track which replicas have acknowledged each log index
-        self.ack_count: Dict[int, Set[str]] = {}  # index -> set of node_ids
+        self.ack_count: Dict[int, Set[str]] = {}
         self.lock = threading.Lock()
 
     def record_ack(self, log_index: int, from_node: str) -> None:

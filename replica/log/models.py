@@ -13,7 +13,7 @@ class EntryType(str, Enum):
 class Stroke(BaseModel):
     """User drawing stroke."""
     user_id: str
-    points: list[dict[str, float]]  # [{x, y}, ...]
+    points: list[dict[str, float]]
     color: str
     timestamp: int
 
@@ -22,10 +22,10 @@ class LogEntry(BaseModel):
     """RAFT log entry containing a stroke or undo/redo compensation."""
     term: int
     index: int
-    entry_type: EntryType = EntryType.STROKE  # stroke, undo, or redo
-    stroke: Optional[Stroke] = None  # Only for STROKE entries
-    stroke_index: Optional[int] = None  # For UNDO/REDO: which stroke to undo/redo
-    hash: Optional[str] = None  # SHA256 hash for integrity validation
+    entry_type: EntryType = EntryType.STROKE
+    stroke: Optional[Stroke] = None
+    stroke_index: Optional[int] = None
+    hash: Optional[str] = None
     is_committed: bool = False
 
 
@@ -35,7 +35,7 @@ class AppendEntriesRequest(BaseModel):
     leader_id: str
     prev_log_index: int
     prev_log_term: int
-    entries: list[dict[str, Any]]  # Raw stroke data
+    entries: list[dict[str, Any]]
     leader_commit: int
 
 
@@ -43,7 +43,7 @@ class AppendEntriesResponse(BaseModel):
     """Follower response to AppendEntries."""
     term: int
     success: bool
-    last_log_index: int  # For leader to know where to retry
+    last_log_index: int
 
 
 class SyncLogRequest(BaseModel):

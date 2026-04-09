@@ -24,7 +24,6 @@ def handle_append_entries(
 
     last_log_index = log_store.get_last_index()
 
-    # Check 1: Reject if request term is stale
     if req_term < current_term:
         return {
             "term": current_term,
@@ -32,11 +31,9 @@ def handle_append_entries(
             "last_log_index": last_log_index,
         }
 
-    # Check 2: Validate prevLogIndex/prevLogTerm match
     if prev_log_index >= 0:
         prev_entry = log_store.get_entry(prev_log_index)
         if prev_entry is None or prev_entry.term != prev_log_term:
-            # Log mismatch: return current log size for leader to retry
             return {
                 "term": current_term,
                 "success": False,
@@ -45,7 +42,6 @@ def handle_append_entries(
                 "conflict_at": prev_log_index,
             }
 
-    # Check 3: Append new entries (idempotent)
     next_expected = prev_log_index + 1
     for offset, entry_data in enumerate(entries):
         incoming_index = entry_data.get("index", next_expected + offset)
@@ -60,7 +56,6 @@ def handle_append_entries(
         stroke = Stroke(**entry_data.get("stroke", {}))
         log_store.append(entry_data.get("term", current_term), stroke)
 
-    # Update committed entries if leader advances
     if leader_commit > -1:
         log_store.mark_committed(leader_commit)
 

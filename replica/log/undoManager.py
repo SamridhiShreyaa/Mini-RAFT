@@ -15,8 +15,8 @@ class UndoManager:
 
     def __init__(self, node_id: str) -> None:
         self.node_id = node_id
-        self.undone_strokes: Set[int] = set()  # Set of undone stroke indices
-        self.redo_stack: list[int] = []  # Stack of redo-able strokes
+        self.undone_strokes: Set[int] = set()
+        self.redo_stack: list[int] = []
         self.lock = threading.Lock()
 
     def mark_undo(self, stroke_index: int) -> bool:
@@ -26,10 +26,9 @@ class UndoManager:
         """
         with self.lock:
             if stroke_index in self.undone_strokes:
-                return False  # Already undone
+                return False
             
             self.undone_strokes.add(stroke_index)
-            # Clear redo stack when user performs new undo
             self.redo_stack.clear()
             return True
 
@@ -40,10 +39,9 @@ class UndoManager:
         """
         with self.lock:
             if stroke_index not in self.undone_strokes:
-                return False  # Not undone, can't redo
+                return False
             
             self.undone_strokes.remove(stroke_index)
-            # Track for undo
             if stroke_index not in self.redo_stack:
                 self.redo_stack.append(stroke_index)
             return True
@@ -64,7 +62,7 @@ class UndoManager:
     def can_undo(self) -> bool:
         """Check if there are strokes that can be undone."""
         with self.lock:
-            return len(self.undone_strokes) < 999  # Arbitrary large number
+            return len(self.undone_strokes) < 999
 
     def can_redo(self) -> bool:
         """Check if there are strokes that can be redone."""

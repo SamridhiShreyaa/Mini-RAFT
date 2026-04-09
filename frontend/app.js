@@ -56,9 +56,17 @@ controls.onToolChange = (tool) => {
 controls.onAction = (act) => {
   let changed = false;
   if (act === 'undo') {
-    if (canvas.undo()) { conn.sendUndo(); changed = true; }
+    if (canvas.undo()) { 
+      conn.sendUndo(); 
+      tabSync.broadcast({ type: 'undo' });
+      changed = true; 
+    }
   } else if (act === 'redo') {
-    if (canvas.redo()) { conn.sendRedo(); changed = true; }
+    if (canvas.redo()) { 
+      conn.sendRedo(); 
+      tabSync.broadcast({ type: 'redo' });
+      changed = true; 
+    }
   } else if (act === 'clear') {
     if (confirm('Clear the whole board?')) {
       canvas.clear();
@@ -162,6 +170,12 @@ tabSync.onReceive = (data) => {
     saveStrokes();
   } else if (data.type === 'clear') {
     canvas.clear();
+    saveStrokes();
+  } else if (data.type === 'undo') {
+    canvas.undo();
+    saveStrokes();
+  } else if (data.type === 'redo') {
+    canvas.redo();
     saveStrokes();
   }
 };
