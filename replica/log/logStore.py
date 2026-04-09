@@ -9,7 +9,7 @@ from .models import LogEntry, Stroke, EntryType
 def compute_entry_hash(entry: LogEntry) -> str:
     """Compute SHA256 hash of log entry for integrity validation."""
     entry_dict = entry.model_dump()
-    entry_dict.pop("hash", None)  # Remove hash field before hashing
+    entry_dict.pop("hash", None)
     entry_json = json.dumps(entry_dict, sort_keys=True)
     return hashlib.sha256(entry_json.encode()).hexdigest()
 
@@ -19,7 +19,7 @@ class LogStore:
 
     def __init__(self, node_id: str, enable_hashing: bool = True) -> None:
         self.node_id = node_id
-        self.entries: List[LogEntry] = []  # Index 0 is sentinel, actual logs start at index 1
+        self.entries: List[LogEntry] = []
         self.lock = threading.Lock()
         self.log_file = f"logs/node_{node_id}.json"
         self.enable_hashing = enable_hashing
@@ -50,7 +50,6 @@ class LogStore:
                 is_committed=False
             )
             
-            # Compute hash for integrity validation
             if self.enable_hashing:
                 entry.hash = compute_entry_hash(entry)
             
@@ -159,7 +158,7 @@ class LogStore:
             with open(self.log_file, "a") as f:
                 f.write(json.dumps(entry.model_dump()) + "\n")
         except Exception:
-            pass  # Gracefully handle file I/O errors
+            pass
 
     def _load_from_disk(self) -> None:
         """Load log entries from disk on startup."""
@@ -173,6 +172,6 @@ class LogStore:
                         entry = LogEntry(**data)
                         self.entries.append(entry)
         except FileNotFoundError:
-            pass  # First startup, no log file yet
+            pass
         except Exception:
-            pass  # Gracefully handle errors
+            pass

@@ -32,7 +32,6 @@ class TestLogStore:
         entry1 = store.append(term=1, stroke=stroke)
         entry2 = store.append(term=1, stroke=stroke)
 
-        # Verify both entries exist
         assert store.get_entry(0) is not None
         assert store.get_entry(1) is not None
         assert store.get_entry(0).index == 0
@@ -73,7 +72,7 @@ class TestLogStore:
         store.mark_committed(2)
 
         committed = store.get_committed_entries()
-        assert len(committed) == 3  # Indices 0, 1, 2
+        assert len(committed) == 3
         assert all(e.is_committed for e in committed)
 
     def test_get_log_size(self):
@@ -93,30 +92,23 @@ class TestLogStore:
         store = LogStore("test_node")
         stroke = Stroke(user_id="u1", points=[], color="red", timestamp=100)
 
-        # Add 5 entries
         for i in range(5):
             store.append(term=1, stroke=stroke)
 
-        # Mark indices 0, 1 as committed via mark_committed(1)
         store.mark_committed(1)
-        # Manually mark 3, 4 as committed
         store.entries[3].is_committed = True
         store.entries[4].is_committed = True
 
-        # Get committed from index 1 onward
         committed_from_1 = store.get_committed_entries_from(1)
-        assert len(committed_from_1) == 3  # Indices 1, 3, 4
+        assert len(committed_from_1) == 3
         assert all(e.is_committed for e in committed_from_1)
 
-        # Get committed from index 0 onward
         committed_from_0 = store.get_committed_entries_from(0)
-        assert len(committed_from_0) == 4  # Indices 0, 1, 3, 4
+        assert len(committed_from_0) == 4
 
-        # Get committed from index 2 onward (beyond committed region)
         committed_from_2 = store.get_committed_entries_from(2)
-        assert len(committed_from_2) == 2  # Only indices 3, 4
+        assert len(committed_from_2) == 2
 
-        # Get committed from index 5 onward (beyond log)
         committed_from_5 = store.get_committed_entries_from(5)
         assert len(committed_from_5) == 0
 
@@ -134,22 +126,20 @@ class TestCommitManager:
         manager = CommitManager("node1", ["node2", "node3"])
 
         manager.record_ack(0, "node1")
-        assert not manager.can_commit(0)  # 1/2 acks
+        assert not manager.can_commit(0)
 
         manager.record_ack(0, "node2")
-        assert manager.can_commit(0)  # 2/2 acks (majority)
+        assert manager.can_commit(0)
 
     def test_get_commit_index_contiguous(self):
         """get_commit_index returns highest contiguous committed index."""
         manager = CommitManager("node1", ["node2", "node3"])
 
-        # Setup: index 0 committed, index 1 not committed, index 2 committed
         manager.record_ack(0, "node1")
         manager.record_ack(0, "node2")
         manager.record_ack(2, "node1")
         manager.record_ack(2, "node2")
 
-        # Should return 0 (highest contiguous)
         assert manager.get_commit_index() == 0
 
     def test_record_self_ack(self):
@@ -254,11 +244,9 @@ class TestAppendEntries:
         store = LogStore("test_node")
         stroke = Stroke(user_id="u1", points=[], color="red", timestamp=100)
 
-        # Add 3 entries
         for _ in range(3):
             store.append(term=1, stroke=stroke)
 
-        # Leader says commit up to index 1
         response = handle_append_entries(
             store,
             current_term=1,
@@ -275,13 +263,13 @@ class TestAppendEntries:
 
         assert response["success"] is True
         committed = store.get_committed_entries()
-        assert len(committed) == 2  # Indices 0 and 1
+    assert len(committed) == 2
 
     def test_prev_log_term_mismatch(self):
         """Reject if prevLogIndex term doesn't match."""
         store = LogStore("test_node")
         stroke = Stroke(user_id="u1", points=[], color="red", timestamp=100)
-        store.append(term=1, stroke=stroke)  # Index 0 has term=1
+        store.append(term=1, stroke=stroke)
 
         response = handle_append_entries(
             store,
@@ -291,7 +279,7 @@ class TestAppendEntries:
                 "term": 2,
                 "leader_id": "leader",
                 "prev_log_index": 0,
-                "prev_log_term": 2,  # Mismatch: actual term is 1
+                "prev_log_term": 2,
                 "entries": [],
                 "leader_commit": -1,
             }
@@ -311,7 +299,6 @@ class TestOrdering:
             stroke = Stroke(user_id="u1", points=[{"x": i}], color=color, timestamp=100 + i)
             store.append(term=1, stroke=stroke)
 
-        # Verify order
         entries = store.get_entries_from(0)
         assert entries[0].stroke.color == "red"
         assert entries[1].stroke.color == "blue"
@@ -325,11 +312,9 @@ class TestOrdering:
         entry1 = store.append(term=1, stroke=stroke)
         assert store.get_log_size() == 1
 
-        # Simulate receiving same entry again (leader retry)
         entry2 = store.append(term=1, stroke=stroke)
         assert store.get_log_size() == 2
 
-        # Entries should have different indices
         assert entry1.index == 0
         assert entry2.index == 1
 
@@ -352,7 +337,7 @@ class TestUndoRedo:
         manager = UndoManager("node1")
 
         assert manager.mark_undo(0)
-        assert not manager.mark_undo(0)  # Already undone
+        assert not manager.mark_undo(0)
 
     def test_mark_undone_stroke_as_active_redo(self):
         """Mark undone stroke as active again (redo)."""
@@ -370,7 +355,7 @@ class TestUndoRedo:
         from replica.log.undoManager import UndoManager
         manager = UndoManager("node1")
 
-        assert not manager.mark_redo(0)  # Not undone
+        assert not manager.mark_redo(0)
 
     def test_get_active_strokes_filters_undone(self):
         """get_active_strokes excludes undone strokes."""
@@ -390,12 +375,10 @@ class TestUndoRedo:
         store = LogStore("test_node")
         stroke = Stroke(user_id="u1", points=[], color="red", timestamp=100)
 
-        # Add stroke
         entry1 = store.append(term=1, stroke=stroke, entry_type=EntryType.STROKE)
         assert entry1.entry_type == EntryType.STROKE
         assert entry1.index == 0
 
-        # Append undo
         entry2 = store.append(
             term=1,
             stroke=None,
@@ -406,7 +389,6 @@ class TestUndoRedo:
         assert entry2.stroke_index == 0
         assert entry2.index == 1
 
-        # Append redo
         entry3 = store.append(
             term=1,
             stroke=None,
@@ -426,22 +408,17 @@ class TestUndoRedo:
         manager = UndoManager("node1")
         stroke = Stroke(user_id="u1", points=[], color="red", timestamp=100)
 
-        # Add 2 strokes
         entry1 = store.append(term=1, stroke=stroke, entry_type=EntryType.STROKE)
         entry2 = store.append(term=1, stroke=stroke, entry_type=EntryType.STROKE)
 
-        # Mark as committed
         store.mark_committed(1)
 
-        # Add undo entry
         store.append(term=1, stroke=None, entry_type=EntryType.UNDO, stroke_index=0)
         
-        # Mark stroke 0 as undone in undo manager
         manager.mark_undo(0)
 
-        # Get active strokes
         active = store.get_active_strokes(manager)
-        assert len(active) == 1  # Only entry2 (entry1 is undone)
+        assert len(active) == 1
         assert active[0].index == 1
 
 
@@ -455,7 +432,7 @@ class TestHashIntegrity:
 
         entry = store.append(term=1, stroke=stroke)
         assert entry.hash is not None
-        assert len(entry.hash) == 64  # SHA256 hex is 64 chars
+        assert len(entry.hash) == 64
 
     def test_hash_different_for_different_entries(self):
         """Different entries have different hashes."""
@@ -526,7 +503,6 @@ class TestHashIntegrity:
 
         entry = store.append(term=1, stroke=stroke)
 
-        # Corrupt the hash
         entry.hash = "corrupted_hash"
 
         assert not store.validate_entry_hash(entry)
@@ -539,7 +515,7 @@ class TestHashIntegrity:
 
         entry = store.append(term=1, stroke=stroke)
         assert entry.hash is None
-        assert store.validate_entry_hash(entry)  # Always true when disabled
+        assert store.validate_entry_hash(entry)
 
     def test_undo_redo_entries_also_hashed(self):
         """UNDO/REDO compensation entries also get hashed."""
