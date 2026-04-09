@@ -1,62 +1,63 @@
-# Mini-RAFT: Distributed Drawing Board
+# Mini-RAFT Distributed Drawing Board
 
-Base scaffold for the team project with RAFT replica components, gateway, UI modules, infrastructure, and tests.
+A powerful distributed systems project simulating cloud-native consensus models using a miniature version of the RAFT protocol. Multiple backend replicas maintain an identical event log of drawing strokes without relying on a central database, ensuring zero downtime even when containers crash.
 
-## Repository Structure
+## RAFT Theory Overview
+*   **Leader Election**: All nodes start as Followers. If they haven't heard from a Leader before a randomized timer expires, they become a Candidate and request votes. The first to achieve a majority becomes the Leader.
+*   **Log Replication**: The Leader is the only node trusted to accept client data. It appends the data (drawing strokes) to an immutable log and blasts it to Followers. Once a majority acknowledge, the state is committed.
+*   **Fault Tolerance**: If a node fails, it restarts and attempts to re-sync. If the Leader fails, followers notice the lack of heartbeats and securely elect a new one without disrupting data persistence. 
 
-```text
-.
-├── gateway/                  # T4
-├── replica/
-│   ├── consensus/            # T1
-│   ├── log/                  # T2
-│   ├── recovery/             # T3
-│   ├── state/
-│   └── rpc/
-├── replica1/
-├── replica2/
-├── replica3/
-├── replica4/                 # BONUS
-├── infra/                    # T4
-├── tests/                    # T3 lead
-├── shared/
-├── frontend/                 # T5 (ALL UI)
-│   ├── canvas/
-│   ├── websocket/
-│   ├── dashboard/
-│   └── controls/
-├── docs/
-├── docker-compose.yml
-└── README.md
+## Architecture Overview
+
+```mermaid
+graph TD
+    UI[HTML Canvas UI] -->|WebSocket| G(Gateway Proxy)
+    G -->|POST /submit-stroke| L[Leader Node: 3001]
+    L -.->|RPC /append-entries| F1[Follower Node: 3002]
+    L -.->|RPC /append-entries| F2[Follower Node: 3003]
+    L -.->|RPC /append-entries| F3[Follower Node: 3004]
 ```
 
-## CI/CD Pipeline
+## Setup & Instructions
 
-The repository uses **GitHub Actions** to automate testing and deployment.
+### Backend Start
+1. Ensure Docker Desktop is running.
+2. At the root of the project, run:
+```bash
+docker-compose up --build
+```
+This boots the Gateway (Port 3000) and your Replica Nodes (3001+).
 
-### Workflows
+### Frontend Start
+1. In a separate terminal, navigate into the `frontend` folder:
+```bash
+cd frontend
+npm install
+npm run serve
+```
+2. Open `http://localhost:8080` in multiple browser tabs to simulate clients. 
 
-| Workflow | Trigger | Purpose |
-|---|---|---|
-| **CI** (`.github/workflows/ci.yml`) | Push to `dev`, PR targeting `main` | Installs dependencies, runs `pytest tests/` |
-| **CD** (`.github/workflows/cd.yml`) | Push to `dev` (after CI passes) | Auto-merges `dev` → `main` |
+## Assumptions & Constraints
+* All system instances run over `http` inside local Docker bridges. Network latencies are artificially mimicked. 
+* Logs are held in memory on the replicas and are not persisted entirely to physical disk arrays between total cluster teardowns (`docker-compose down`). 
 
-### Branch Strategy
+---
 
-| Branch | Rule |
-|---|---|
-| `main` | **No direct pushes allowed** — changes arrive only via the auto-merge from `dev` once CI passes |
-| `dev` | Active development branch; CI runs on every push |
+## MiniRAFT Project Checklist
 
-### Enabling Branch Protection for `main`
+- [x] Leader election
+- [x] WebSocket Gateway
+- [x] Basic log replication
+- [x] Drawing canvas integration
+- [x] Graceful reload
+- [x] Blue-green replica replacement
+- [x] Failover correctness
+- [x] Multi-client real-time sync
+- [x] Demo under chaotic conditions
 
-> **One-time setup** — a repository admin must do this once via GitHub.
-
-1. Go to **Settings → Branches → Add branch protection rule**.
-2. Set **Branch name pattern** to `main`.
-3. Enable **Require status checks to pass before merging** and add `Run tests` as a required check.
-4. Enable **Restrict pushes that create matching branches** and do **not** add any users/teams (this blocks direct pushes).
-5. Enable **Do not allow bypassing the above settings**.
-6. Click **Save changes**.
-
-After this, all changes to `main` must flow through the CD workflow (which waits for CI to succeed on `dev`).
+**Bonus Options:**
+- [x] Network partitions (simulate split brain)
+- [x] Add 4th replica
+- [x] Add vector-based undo/redo using log compensation
+- [x] Implement a dashboard showing leader, term, log sizes
+- [x] Deploy to a real cloud VM (e.g., Amazon Web Services (AWS) EC2 or Google Cloud)
