@@ -7,7 +7,7 @@
 *   **Chaos Engineering**: Developing test strategies targeting network failures, dropouts, and multi-failure environments.
 
 ## Relevant RAFT Theory
-Teammate 3's focus tackles strict consistency under failure—a core reason RAFT is used over basic failover systems. Their domain manages log reconciliation, ensuring that an outdated lagging node drops uncommitted changes and retrieves an undisputed subset of data from the latest term leader.
+This module ensures strict consistency under failure, a core reason RAFT is used over basic failover systems. Their domain manages log reconciliation, ensuring that an outdated lagging node drops uncommitted changes and retrieves an undisputed subset of data from the latest term leader.
 
 ## Architecture Diagram
 
@@ -45,4 +45,4 @@ sequenceDiagram
 *   **Server Sync Log API**: `replica/consensus/server.py` (Line 168) `sync_log()`
 
 ## Contribution to RAFT
-Without Teammate 3's layer, a disconnected node returning to the cluster would corrupt the shared consensus. By rigorously implementing `SyncLogRequest`, `ConsistencyChecker`, and `ReconciliationEngine`, the system behaves as a self-healing datastore where disconnected nodes reliably catch up to the committed threshold without impacting zero-downtime promises.
+Without this layer, a disconnected node returning to the cluster would corrupt the shared consensus. By rigorously implementing `SyncLogRequest`, `ConsistencyChecker`, and `ReconciliationEngine`, the system behaves as a self-healing datastore where disconnected nodes reliably catch up to the committed threshold without impacting zero-downtime promises.
